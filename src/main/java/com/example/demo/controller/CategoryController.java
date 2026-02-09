@@ -1,7 +1,10 @@
 package com.example.demo.controller;
 
-import com.example.demo.model.Product;
-import com.example.demo.service.ProductService;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -11,39 +14,37 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.List;
+import com.example.demo.service.CategoryService;
+import com.example.demo.model.Category;
 
 @RestController
-@RequestMapping("/api/products")
+@RequestMapping("/api/categories")
 @CrossOrigin(origins = "*")
-public class ProductController {
+public class CategoryController {
 
     @Autowired
-    private ProductService productService;
+    private CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
-        List<Product> products = productService.getAllProducts();
-        return ResponseEntity.ok(products);
+    public ResponseEntity<List<Category>> getAllCategories() {
+        List<Category> categories = categoryService.getAllCategories();
+        return ResponseEntity.ok(categories);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        return productService.getProductById(id)
+    public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
+        return categoryService.getCategoryById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/{id}/image")
-    public ResponseEntity<Resource> getProductImage(@PathVariable Long id) {
-        return productService.getProductById(id)
-                .map(product -> {
+    public ResponseEntity<Resource> getCategoryImage(@PathVariable Long id) {
+        return categoryService.getCategoryById(id)
+                .map(category -> {
                     try {
-                        if (product.getImagePath() != null) {
-                            Path imagePath = productService.getImagePath(product.getImagePath());
+                        if (category.getImagePath() != null) {
+                            Path imagePath = categoryService.getImagePath(category.getImagePath());
                             Resource resource = new UrlResource(imagePath.toUri());
 
                             if (resource.exists() && resource.isReadable()) {
@@ -66,31 +67,33 @@ public class ProductController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Product> createProduct(
+    public ResponseEntity<Category> createCategory(
             @RequestParam("name") String name,
             @RequestParam("description") String description,
-            @RequestParam("price") Double price,
             @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
-            Product product = new Product(name, description, price);
-            Product savedProduct = productService.createProduct(product, image);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
+            Category category = new Category();
+            category.setName(name);
+            category.setDescription(description);
+            Category savedCategory = categoryService.createCategory(category, image);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedCategory);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Product> updateProduct(
+    public ResponseEntity<Category> updateCategory(
             @PathVariable Long id,
             @RequestParam("name") String name,
             @RequestParam("description") String description,
-            @RequestParam("price") Double price,
             @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
-            Product productDetails = new Product(name, description, price);
-            Product updatedProduct = productService.updateProduct(id, productDetails, image);
-            return ResponseEntity.ok(updatedProduct);
+            Category categoryDetails = new Category();
+            categoryDetails.setName(name);
+            categoryDetails.setDescription(description);
+            Category updatedCategory = categoryService.updateCategory(id, categoryDetails, image);
+            return ResponseEntity.ok(updatedCategory);
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         } catch (IOException e) {
@@ -99,9 +102,9 @@ public class ProductController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
         try {
-            productService.deleteProduct(id);
+            categoryService.deleteCategory(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {
             return ResponseEntity.notFound().build();

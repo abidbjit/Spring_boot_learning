@@ -3,21 +3,18 @@ package com.example.demo.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "products")
-public class Product {
+@Table(name = "categories")
+public class Category {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String name;
 
     @Column(length = 1000)
     private String description;
-
-    @Column(nullable = false)
-    private Double price;
 
     @Column(name = "image_name")
     private String imageName;
@@ -26,13 +23,14 @@ public class Product {
     private String imagePath;
 
     // Constructors
-    public Product() {
+    public Category() {
     }
 
-    public Product(String name, String description, Double price) {
+    public Category(String name, String description, String imageName, String imagePath) {
         this.name = name;
         this.description = description;
-        this.price = price;
+        this.imageName = imageName;
+        this.imagePath = imagePath;
     }
 
     // Getters and Setters
@@ -58,14 +56,6 @@ public class Product {
 
     public void setDescription(String description) {
         this.description = description;
-    }
-
-    public Double getPrice() {
-        return price;
-    }
-
-    public void setPrice(Double price) {
-        this.price = price;
     }
 
     public String getImageName() {
