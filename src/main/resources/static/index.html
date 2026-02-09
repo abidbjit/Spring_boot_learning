@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        
+        .form-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        input[type="file"] {
+            padding: 10px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            width: 100%;
+            cursor: pointer;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .product-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .product-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+        
+        .product-info {
+            padding: 20px;
+        }
+        
+        .product-name {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        
+        .product-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .product-price {
+            font-size: 1.5em;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .product-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-edit {
+            flex: 1;
+            background: #28a745;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .btn-delete {
+            flex: 1;
+            background: #dc3545;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .no-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 1.2em;
+        }
+        
+        #updateSection {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛍️ Product Management System</h1>
+            <p>Complete CRUD Operations with Image Upload</p>
+        </header>
+        
+        <div class="content">
+            <div id="message" class="message"></div>
+            
+            <!-- Create Product Form -->
+            <div class="form-section" id="createSection">
+                <h2>➕ Add New Product</h2>
+                <form id="createForm">
+                    <div class="form-group">
+                        <label for="name">Product Name *</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="price">Price ($) *</label>
+                        <input type="number" id="price" name="price" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="image">Product Image <small style="color: #999;">(Max 100MB)</small></label>
+                        <input type="file" id="image" name="image" accept="image/*">
+                    </div>
+                    
+                    <button type="submit">Create Product</button>
+                </form>
+            </div>
+            
+            <!-- Update Product Form (Hidden by default) -->
+            <div class="form-section" id="updateSection">
+                <h2>✏️ Update Product</h2>
+                <form id="updateForm">
+                    <input type="hidden" id="updateId">
+                    
+                    <div class="form-group">
+                        <label for="updateName">Product Name *</label>
+                        <input type="text" id="updateName" name="name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="updateDescription">Description</label>
+                        <textarea id="updateDescription" name="description"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="updatePrice">Price ($) *</label>
+                        <input type="number" id="updatePrice" name="price" step="0.01" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="updateImage">New Product Image (optional) <small style="color: #999;">(Max 100MB)</small></label>
+                        <input type="file" id="updateImage" name="image" accept="image/*">
+                    </div>
+                    
+                    <button type="submit">Update Product</button>
+                    <button type="button" onclick="cancelUpdate()" style="background: #6c757d; margin-left: 10px;">Cancel</button>
+                </form>
+            </div>
+            
+            <!-- Products List -->
+            <div class="form-section">
+                <h2>📦 Products List</h2>
+                <div id="productsList" class="products-grid"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_URL = '/api/products';
+        
+        // Load all products on page load
+        document.addEventListener('DOMContentLoaded', loadProducts);
+        
+        // Create Product Form Submit
+        document.getElementById('createForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('name', document.getElementById('name').value);
+            formData.append('description', document.getElementById('description').value);
+            formData.append('price', document.getElementById('price').value);
+            
+            const imageFile = document.getElementById('image').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+            
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    showMessage('Product created successfully!', 'success');
+                    document.getElementById('createForm').reset();
+                    loadProducts();
+                } else {
+                    showMessage('Failed to create product', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        });
+        
+        // Update Product Form Submit
+        document.getElementById('updateForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('updateId').value;
+            const formData = new FormData();
+            formData.append('name', document.getElementById('updateName').value);
+            formData.append('description', document.getElementById('updateDescription').value);
+            formData.append('price', document.getElementById('updatePrice').value);
+            
+            const imageFile = document.getElementById('updateImage').files[0];
+            if (imageFile) {
+                formData.append('image', imageFile);
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'PUT',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    showMessage('Product updated successfully!', 'success');
+                    cancelUpdate();
+                    loadProducts();
+                } else {
+                    showMessage('Failed to update product', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        });
+        
+        // Load all products
+        async function loadProducts() {
+            try {
+                const response = await fetch(API_URL);
+                const products = await response.json();
+                
+                const productsContainer = document.getElementById('productsList');
+                
+                if (products.length === 0) {
+                    productsContainer.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">No products available. Create your first product!</p>';
+                    return;
+                }
+                
+                productsContainer.innerHTML = products.map(product => `
+                    <div class="product-card">
+                        ${product.imageName ? 
+                            `<img src="${API_URL}/${product.id}/image" alt="${product.name}" class="product-image">` :
+                            `<div class="no-image">No Image</div>`
+                        }
+                        <div class="product-info">
+                            <div class="product-name">${product.name}</div>
+                            <div class="product-description">${product.description || 'No description'}</div>
+                            <div class="product-price">$${product.price.toFixed(2)}</div>
+                            <div class="product-actions">
+                                <button class="btn-edit" onclick="editProduct(${product.id})">Edit</button>
+                                <button class="btn-delete" onclick="deleteProduct(${product.id})">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                showMessage('Error loading products: ' + error.message, 'error');
+            }
+        }
+        
+        // Edit product
+        async function editProduct(id) {
+            try {
+                const response = await fetch(`${API_URL}/${id}`);
+                const product = await response.json();
+                
+                document.getElementById('updateId').value = product.id;
+                document.getElementById('updateName').value = product.name;
+                document.getElementById('updateDescription').value = product.description;
+                document.getElementById('updatePrice').value = product.price;
+                
+                document.getElementById('createSection').style.display = 'none';
+                document.getElementById('updateSection').style.display = 'block';
+                
+                // Scroll to update form
+                document.getElementById('updateSection').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                showMessage('Error loading product: ' + error.message, 'error');
+            }
+        }
+        
+        // Cancel update
+        function cancelUpdate() {
+            document.getElementById('updateForm').reset();
+            document.getElementById('createSection').style.display = 'block';
+            document.getElementById('updateSection').style.display = 'none';
+        }
+        
+        // Delete product
+        async function deleteProduct(id) {
+            if (!confirm('Are you sure you want to delete this product?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showMessage('Product deleted successfully!', 'success');
+                    loadProducts();
+                } else {
+                    showMessage('Failed to delete product', 'error');
+                }
+            } catch (error) {
+                showMessage('Error: ' + error.message, 'error');
+            }
+        }
+        
+        // Show message
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
