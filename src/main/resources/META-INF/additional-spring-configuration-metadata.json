@@ -3,5 +3,15 @@
     "name": "file.upload-base-dir",
     "type": "java.lang.String",
     "description": "Base directory for file uploads. Subdirectories will be created for different entity types (products, categories, etc.)"
+  },
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.secret'"
+  },
+  {
+    "name": "jwt.expiration",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.expiration'"
   }
 ]}

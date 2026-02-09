@@ -32,6 +32,10 @@ public class ProductService {
         return productRepository.findById(id);
     }
 
+    public List<Product> getProductsByCategory(Long categoryId) {
+        return productRepository.findByCategoryId(categoryId);
+    }
+
     public Product createProduct(Product product, MultipartFile imageFile) throws IOException {
         if (imageFile != null && !imageFile.isEmpty()) {
             String imagePath = fileStorageService.saveFile(imageFile, baseUploadDir + "/products");

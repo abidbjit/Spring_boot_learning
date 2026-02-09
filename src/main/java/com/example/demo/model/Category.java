@@ -73,4 +73,16 @@ public class Category {
     public void setImagePath(String imagePath) {
         this.imagePath = imagePath;
     }
+
+
+    @OneToMany(mappedBy = "category")
+    private java.util.List<Product> products;
+
+    public java.util.List<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(java.util.List<Product> products) {
+        this.products = products;
+    }
 }

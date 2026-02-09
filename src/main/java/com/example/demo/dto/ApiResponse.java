@@ -41,6 +41,12 @@ public class ApiResponse {
         return response;
     }
 
+    public static ApiResponse successCollection(String message, Object collection) {
+        ApiResponse response = new ApiResponse(true, message, 200);
+        response.resource = collection;
+        return response;
+    }
+
     public static ApiResponse noContent(String message) {
         return new ApiResponse(true, message, 204);
     }

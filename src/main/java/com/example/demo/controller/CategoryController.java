@@ -5,8 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
-import com.example.demo.dto.ApiCollection;
 import com.example.demo.dto.ApiResponse;
+import com.example.demo.dto.Category.CategoryResource;
+import com.example.demo.dto.Category.CategoryCollection;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -30,15 +31,17 @@ public class CategoryController {
     @GetMapping
     public ResponseEntity<ApiResponse> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
-        ApiCollection<Category> collection = ApiCollection.of(categories);
+        CategoryCollection collection = CategoryCollection.from(categories);
         return ResponseEntity.ok(ApiResponse.successCollection("Categories retrieved successfully", collection));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse> getCategoryById(@PathVariable Long id) {
         return categoryService.getCategoryById(id)
-                .map(category -> ResponseEntity
-                        .ok(ApiResponse.successResource("Category retrieved successfully", category)))
+                .map(category -> {
+                    CategoryResource resource = CategoryResource.from(category);
+                    return ResponseEntity.ok(ApiResponse.successResource("Category retrieved successfully", resource));
+                })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.notFound("Category not found with id: " + id)));
     }
@@ -81,8 +84,9 @@ public class CategoryController {
             category.setName(name);
             category.setDescription(description);
             Category savedCategory = categoryService.createCategory(category, image);
+            CategoryResource resource = CategoryResource.from(savedCategory);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.createdResource("Category created successfully", savedCategory));
+                    .body(ApiResponse.createdResource("Category created successfully", resource));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.internalError("Failed to create category: " + e.getMessage()));
@@ -100,7 +104,8 @@ public class CategoryController {
             categoryDetails.setName(name);
             categoryDetails.setDescription(description);
             Category updatedCategory = categoryService.updateCategory(id, categoryDetails, image);
-            return ResponseEntity.ok(ApiResponse.successResource("Category updated successfully", updatedCategory));
+            CategoryResource resource = CategoryResource.from(updatedCategory);
+            return ResponseEntity.ok(ApiResponse.successResource("Category updated successfully", resource));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.notFound("Category not found with id: " + id));

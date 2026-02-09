@@ -145,12 +145,17 @@
 
         // Handle API response with authentication check
         async function handleApiResponse(response) {
+            const result = await response.json();
+            
             if (response.status === 401) {
-                alert('Session expired. Please login again.');
-                logout();
+                showToast(result.error || 'Session expired. Please login again.');
+                setTimeout(() => {
+                    logout();
+                }, 2000);
                 throw new Error('Unauthorized');
             }
-            return response;
+            
+            return result;
         }
         
         // Load categories on page load
@@ -164,8 +169,7 @@
                 headers: getAuthHeaders()
             })
             .then(async response => {
-                await handleApiResponse(response);
-                return response.json();
+                return await handleApiResponse(response);
             })
             .then(result => {
                 const tbody = document.getElementById('categoryTableBody');
@@ -177,7 +181,7 @@
                     return;
                 }
                 
-                const data = result.collection.items || [];
+                const data = result.resource.items || [];
                 
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No categories found. Create your first category!</td></tr>';

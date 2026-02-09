@@ -1,7 +1,8 @@
 package com.example.demo.controller;
 
-import com.example.demo.dto.ApiCollection;
 import com.example.demo.dto.ApiResponse;
+import com.example.demo.dto.Product.ProductResource;
+import com.example.demo.dto.Product.ProductCollection;
 import com.example.demo.model.Product;
 import com.example.demo.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,15 +30,24 @@ public class ProductController {
     @GetMapping
     public ResponseEntity<ApiResponse> getAllProducts() {
         List<Product> products = productService.getAllProducts();
-        ApiCollection<Product> collection = ApiCollection.of(products);
+        ProductCollection collection = ProductCollection.from(products);
+        return ResponseEntity.ok(ApiResponse.successCollection("Products retrieved successfully", collection));
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<ApiResponse> getProductsByCategory(@PathVariable Long categoryId) {
+        List<Product> products = productService.getProductsByCategory(categoryId);
+        ProductCollection collection = ProductCollection.from(products);
         return ResponseEntity.ok(ApiResponse.successCollection("Products retrieved successfully", collection));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse> getProductById(@PathVariable Long id) {
         return productService.getProductById(id)
-                .map(product -> ResponseEntity
-                        .ok(ApiResponse.successResource("Product retrieved successfully", product)))
+                .map(product -> {
+                    ProductResource resource = ProductResource.from(product);
+                    return ResponseEntity.ok(ApiResponse.successResource("Product retrieved successfully", resource));
+                })
                 .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
                         .body(ApiResponse.notFound("Product not found with id: " + id)));
     }
@@ -79,8 +89,9 @@ public class ProductController {
         try {
             Product product = new Product(name, description, price);
             Product savedProduct = productService.createProduct(product, image);
+            ProductResource resource = ProductResource.from(savedProduct);
             return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(ApiResponse.createdResource("Product created successfully", savedProduct));
+                    .body(ApiResponse.createdResource("Product created successfully", resource));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.internalError("Failed to create product: " + e.getMessage()));
@@ -97,7 +108,8 @@ public class ProductController {
         try {
             Product productDetails = new Product(name, description, price);
             Product updatedProduct = productService.updateProduct(id, productDetails, image);
-            return ResponseEntity.ok(ApiResponse.successResource("Product updated successfully", updatedProduct));
+            ProductResource resource = ProductResource.from(updatedProduct);
+            return ResponseEntity.ok(ApiResponse.successResource("Product updated successfully", resource));
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(ApiResponse.notFound("Product not found with id: " + id));
