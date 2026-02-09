@@ -21,8 +21,8 @@ public class ProductService {
     @Autowired
     private FileStorageService fileStorageService;
 
-    @Value("${file.upload-dir}")
-    private String uploadDir;
+    @Value("${file.upload-base-dir}")
+    private String baseUploadDir;
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
@@ -34,7 +34,7 @@ public class ProductService {
 
     public Product createProduct(Product product, MultipartFile imageFile) throws IOException {
         if (imageFile != null && !imageFile.isEmpty()) {
-            String imagePath = fileStorageService.saveFile(imageFile, uploadDir);
+            String imagePath = fileStorageService.saveFile(imageFile, baseUploadDir + "/products");
             product.setImageName(imageFile.getOriginalFilename());
             product.setImagePath(imagePath);
         }
@@ -52,10 +52,10 @@ public class ProductService {
         if (imageFile != null && !imageFile.isEmpty()) {
             // Delete old image if exists
             if (product.getImagePath() != null) {
-                fileStorageService.deleteFile(product.getImagePath(), uploadDir);
+                fileStorageService.deleteFile(product.getImagePath(), baseUploadDir + "/products");
             }
             // Save new image
-            String imagePath = fileStorageService.saveFile(imageFile, uploadDir);
+            String imagePath = fileStorageService.saveFile(imageFile, baseUploadDir + "/products");
             product.setImageName(imageFile.getOriginalFilename());
             product.setImagePath(imagePath);
         }
@@ -66,12 +66,12 @@ public class ProductService {
     public void deleteProduct(Long id) {
         Optional<Product> product = productRepository.findById(id);
         if (product.isPresent() && product.get().getImagePath() != null) {
-            fileStorageService.deleteFile(product.get().getImagePath(), uploadDir);
+            fileStorageService.deleteFile(product.get().getImagePath(), baseUploadDir + "/products");
         }
         productRepository.deleteById(id);
     }
 
     public Path getImagePath(String filename) {
-        return fileStorageService.getFilePath(filename, uploadDir);
+        return fileStorageService.getFilePath(filename, baseUploadDir + "/products");
     }
 }

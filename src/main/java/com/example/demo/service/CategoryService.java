@@ -21,8 +21,8 @@ public class CategoryService {
     @Autowired
     private FileStorageService fileStorageService;
 
-    @Value("${file.category-upload-dir}")
-    private String uploadDir;
+    @Value("${file.upload-base-dir}")
+    private String baseUploadDir;
 
     public List<Category> getAllCategories() {
         return categoryRepository.findAll();
@@ -40,7 +40,7 @@ public class CategoryService {
     // Create with image
     public Category createCategory(Category category, MultipartFile imageFile) throws IOException {
         if (imageFile != null && !imageFile.isEmpty()) {
-            String imagePath = fileStorageService.saveFile(imageFile, uploadDir);
+            String imagePath = fileStorageService.saveFile(imageFile, baseUploadDir + "/categories");
             category.setImageName(imageFile.getOriginalFilename());
             category.setImagePath(imagePath);
         }
@@ -69,10 +69,10 @@ public class CategoryService {
         if (imageFile != null && !imageFile.isEmpty()) {
             // Delete old image if exists
             if (category.getImagePath() != null) {
-                fileStorageService.deleteFile(category.getImagePath(), uploadDir);
+                fileStorageService.deleteFile(category.getImagePath(), baseUploadDir + "/categories");
             }
             // Save new image
-            String imagePath = fileStorageService.saveFile(imageFile, uploadDir);
+            String imagePath = fileStorageService.saveFile(imageFile, baseUploadDir + "/categories");
             category.setImageName(imageFile.getOriginalFilename());
             category.setImagePath(imagePath);
         }
@@ -85,12 +85,12 @@ public class CategoryService {
 
         // Delete associated image if exists
         if (category.getImagePath() != null) {
-            fileStorageService.deleteFile(category.getImagePath(), uploadDir);
+            fileStorageService.deleteFile(category.getImagePath(), baseUploadDir + "/categories");
         }
         categoryRepository.delete(category);
     }
 
     public Path getImagePath(String filename) {
-        return fileStorageService.getFilePath(filename, uploadDir);
+        return fileStorageService.getFilePath(filename, baseUploadDir + "/categories");
     }
 }
