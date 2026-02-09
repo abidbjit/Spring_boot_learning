@@ -85,10 +85,11 @@ public class ProductController {
             @RequestParam("name") String name,
             @RequestParam("description") String description,
             @RequestParam("price") Double price,
+            @RequestParam(value = "categoryId", required = false) Long categoryId,
             @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
             Product product = new Product(name, description, price);
-            Product savedProduct = productService.createProduct(product, image);
+            Product savedProduct = productService.createProduct(product, categoryId, image);
             ProductResource resource = ProductResource.from(savedProduct);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(ApiResponse.createdResource("Product created successfully", resource));
@@ -104,10 +105,11 @@ public class ProductController {
             @RequestParam("name") String name,
             @RequestParam("description") String description,
             @RequestParam("price") Double price,
+            @RequestParam(value = "categoryId", required = false) Long categoryId,
             @RequestParam(value = "image", required = false) MultipartFile image) {
         try {
             Product productDetails = new Product(name, description, price);
-            Product updatedProduct = productService.updateProduct(id, productDetails, image);
+            Product updatedProduct = productService.updateProduct(id, productDetails, categoryId, image);
             ProductResource resource = ProductResource.from(updatedProduct);
             return ResponseEntity.ok(ApiResponse.successResource("Product updated successfully", resource));
         } catch (RuntimeException e) {

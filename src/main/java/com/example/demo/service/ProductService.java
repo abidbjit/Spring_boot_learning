@@ -21,6 +21,9 @@ public class ProductService {
     @Autowired
     private FileStorageService fileStorageService;
 
+    @Autowired
+    private com.example.demo.repository.CategoryRepository categoryRepository;
+
     @Value("${file.upload-base-dir}")
     private String baseUploadDir;
 
@@ -45,6 +48,18 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    public Product createProduct(Product product, Long categoryId, MultipartFile imageFile) throws IOException {
+        if (categoryId != null) {
+            categoryRepository.findById(categoryId).ifPresent(product::setCategory);
+        }
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imagePath = fileStorageService.saveFile(imageFile, baseUploadDir + "/products");
+            product.setImageName(imageFile.getOriginalFilename());
+            product.setImagePath(imagePath);
+        }
+        return productRepository.save(product);
+    }
+
     public Product updateProduct(Long id, Product productDetails, MultipartFile imageFile) throws IOException {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
@@ -52,6 +67,35 @@ public class ProductService {
         product.setName(productDetails.getName());
         product.setDescription(productDetails.getDescription());
         product.setPrice(productDetails.getPrice());
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // Delete old image if exists
+            if (product.getImagePath() != null) {
+                fileStorageService.deleteFile(product.getImagePath(), baseUploadDir + "/products");
+            }
+            // Save new image
+            String imagePath = fileStorageService.saveFile(imageFile, baseUploadDir + "/products");
+            product.setImageName(imageFile.getOriginalFilename());
+            product.setImagePath(imagePath);
+        }
+
+        return productRepository.save(product);
+    }
+
+    public Product updateProduct(Long id, Product productDetails, Long categoryId, MultipartFile imageFile)
+            throws IOException {
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+
+        product.setName(productDetails.getName());
+        product.setDescription(productDetails.getDescription());
+        product.setPrice(productDetails.getPrice());
+
+        if (categoryId != null) {
+            categoryRepository.findById(categoryId).ifPresent(product::setCategory);
+        } else {
+            product.setCategory(null);
+        }
 
         if (imageFile != null && !imageFile.isEmpty()) {
             // Delete old image if exists

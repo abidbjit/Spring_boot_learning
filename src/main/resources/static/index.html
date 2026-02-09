@@ -273,6 +273,13 @@
                         <label for="description">Description</label>
                         <textarea id="description" name="description"></textarea>
                     </div>
+
+<div class="form-group">
+                        <label for="category">Category</label>
+                        <select id="category" name="category" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                            <option value="">-- Select Category --</option>
+                        </select>
+                    </div>
                     
                     <div class="form-group">
                         <label for="price">Price ($) *</label>
@@ -302,6 +309,13 @@
                     <div class="form-group">
                         <label for="updateDescription">Description</label>
                         <textarea id="updateDescription" name="description"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="updateCategory">Category</label>
+                        <select id="updateCategory" name="category" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                            <option value="">-- Select Category --</option>
+                        </select>
                     </div>
                     
                     <div class="form-group">
@@ -377,8 +391,37 @@
         checkAuthentication();
         
         // Load all products on page load
-        document.addEventListener('DOMContentLoaded', loadProducts);
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCategories();
+            loadProducts();
+        });
         
+        // Load categories for dropdown
+        async function loadCategories() {
+            try {
+                const response = await fetch('/api/categories', {
+                    headers: getAuthHeaders()
+                });
+                await handleApiResponse(response);
+                const result = await response.json();
+                
+                if (result.success) {
+                    const categories = result.resource.items || [];
+                    const categorySelect = document.getElementById('category');
+                    const updateCategorySelect = document.getElementById('updateCategory');
+                    
+                    categories.forEach(cat => {
+                        const option1 = new Option(cat.name, cat.id);
+                        const option2 = new Option(cat.name, cat.id);
+                        categorySelect.add(option1);
+                        updateCategorySelect.add(option2);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading categories:', error);
+            }
+        }
+
         // Create Product Form Submit
         document.getElementById('createForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -387,6 +430,11 @@
             formData.append('name', document.getElementById('name').value);
             formData.append('description', document.getElementById('description').value);
             formData.append('price', document.getElementById('price').value);
+            
+            const categoryId = document.getElementById('category').value;
+            if (categoryId) {
+                formData.append('categoryId', categoryId);
+            }
             
             const imageFile = document.getElementById('image').files[0];
             if (imageFile) {
@@ -424,6 +472,11 @@
             formData.append('name', document.getElementById('updateName').value);
             formData.append('description', document.getElementById('updateDescription').value);
             formData.append('price', document.getElementById('updatePrice').value);
+            
+            const categoryId = document.getElementById('updateCategory').value;
+            if (categoryId) {
+                formData.append('categoryId', categoryId);
+            }
             
             const imageFile = document.getElementById('updateImage').files[0];
             if (imageFile) {
@@ -477,12 +530,13 @@
                 
                 productsContainer.innerHTML = products.map(product => `
                     <div class="product-card">
-                        ${product.imagePath ? 
+                        ${product.image_path ? 
                             `<img src="${API_URL}/${product.id}/image" alt="${product.name}" class="product-image">` :
                             `<div class="no-image">No Image</div>`
                         }
                         <div class="product-info">
                             <div class="product-name">${product.name}</div>
+                            ${product.category ? `<div style="color: #667eea; font-size: 0.9em; margin-bottom: 8px;"><i class="bi bi-tag"></i> ${product.category.name}</div>` : ''}
                             <div class="product-description">${product.description || 'No description'}</div>
                             <div class="product-price">$${product.price.toFixed(2)}</div>
                             <div class="product-actions">
@@ -501,12 +555,26 @@
         async function editProduct(id) {
             try {
                 const response = await fetch(`${API_URL}/${id}`);
-                const product = await response.json();
+                await handleApiResponse(response);
+                const result = await response.json();
                 
+                if (!result.success) {
+                    showMessage(result.message || 'Failed to load product', 'error');
+                    return;
+                }
+                
+                const product = result.resource;
                 document.getElementById('updateId').value = product.id;
                 document.getElementById('updateName').value = product.name;
-                document.getElementById('updateDescription').value = product.description;
+                document.getElementById('updateDescription').value = product.description || '';
                 document.getElementById('updatePrice').value = product.price;
+                
+                // Set category if exists
+                if (product.category && product.category.id) {
+                    document.getElementById('updateCategory').value = product.category.id;
+                } else {
+                    document.getElementById('updateCategory').value = '';
+                }
                 
                 document.getElementById('createSection').style.display = 'none';
                 document.getElementById('updateSection').style.display = 'block';

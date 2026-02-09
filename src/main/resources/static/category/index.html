@@ -189,7 +189,7 @@
                 }
                 
                 data.forEach(category => {
-                    const imageCell = category.imagePath 
+                    const imageCell = category.image_path 
                         ? `<img src="/api/categories/${category.id}/image" alt="${category.name}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">` 
                         : '<span class="text-muted"><i class="bi bi-image" style="font-size: 30px;"></i></span>';
                     
