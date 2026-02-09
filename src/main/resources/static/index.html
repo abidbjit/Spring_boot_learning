@@ -240,8 +240,21 @@
 <body>
     <div class="container">
         <header>
-            <h1>🛍️ Product Management System</h1>
-            <p>Complete CRUD Operations with Image Upload</p>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1>🛍️ Product Management System</h1>
+                    <p>Complete CRUD Operations with Image Upload</p>
+                </div>
+                <div class="text-end">
+                    <span id="userInfo" class="me-3"></span>
+                    <a href="/category/index.html" class="btn btn-light btn-sm me-2">
+                        <i class="bi bi-tags"></i> Categories
+                    </a>
+                    <button onclick="logout()" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </button>
+                </div>
+            </div>
         </header>
         
         <div class="content">
@@ -317,6 +330,52 @@
     <script>
         const API_URL = '/api/products';
         
+        // Authentication helper functions
+        function getAuthToken() {
+            return localStorage.getItem('token');
+        }
+
+        function getAuthHeaders() {
+            const token = getAuthToken();
+            return {
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        function checkAuthentication() {
+            if (!getAuthToken()) {
+                window.location.href = '/login.html';
+                return false;
+            }
+            // Display username
+            const username = localStorage.getItem('username');
+            if (username) {
+                document.getElementById('userInfo').innerHTML = `<i class="bi bi-person-circle"></i> ${username}`;
+            }
+            return true;
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('username');
+            window.location.href = '/login.html';
+        }
+
+        // Handle API response with authentication check
+        async function handleApiResponse(response) {
+            if (response.status === 401) {
+                showMessage('Session expired. Please login again.', 'error');
+                setTimeout(() => {
+                    logout();
+                }, 1500);
+                throw new Error('Unauthorized');
+            }
+            return response;
+        }
+
+        // Check authentication on page load
+        checkAuthentication();
+        
         // Load all products on page load
         document.addEventListener('DOMContentLoaded', loadProducts);
         
@@ -337,8 +396,10 @@
             try {
                 const response = await fetch(API_URL, {
                     method: 'POST',
+                    headers: getAuthHeaders(),
                     body: formData
                 });
+                await handleApiResponse(response);
                 
                 const result = await response.json();
                 
@@ -372,8 +433,10 @@
             try {
                 const response = await fetch(`${API_URL}/${id}`, {
                     method: 'PUT',
+                    headers: getAuthHeaders(),
                     body: formData
                 });
+                await handleApiResponse(response);
                 
                 const result = await response.json();
                 
@@ -392,7 +455,10 @@
         // Load all products
         async function loadProducts() {
             try {
-                const response = await fetch(API_URL);
+                const response = await fetch(API_URL, {
+                    headers: getAuthHeaders()
+                });
+                await handleApiResponse(response);
                 const result = await response.json();
                 
                 if (!result.success) {
@@ -467,8 +533,10 @@
             
             try {
                 const response = await fetch(`${API_URL}/${id}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
                 });
+                await handleApiResponse(response);
                 
                 // DELETE returns 204 No Content with no body
                 if (response.ok) {

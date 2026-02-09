@@ -15,4 +15,9 @@ public class HomeController {
     public String category() {
         return "category/index.html";
     }
+
+    @GetMapping("/login")
+    public String login() {
+        return "login.html";
+    }
 }
