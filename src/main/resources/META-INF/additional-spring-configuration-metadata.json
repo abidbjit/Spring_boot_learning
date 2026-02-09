@@ -13,5 +13,10 @@
     "name": "jwt.expiration",
     "type": "java.lang.String",
     "description": "A description for 'jwt.expiration'"
+  },
+  {
+    "name": "security.public-paths",
+    "type": "java.lang.String",
+    "description": "A description for 'security.public-paths'"
   }
 ]}

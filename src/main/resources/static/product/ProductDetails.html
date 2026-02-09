@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <style>
+        body {
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container-card {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px 28px;
+        }
+
+        .content {
+            padding: 28px;
+        }
+
+        .product-image {
+            width: 100%;
+            height: 320px;
+            object-fit: cover;
+            background: #f0f0f0;
+            border-radius: 12px;
+        }
+
+        .no-image {
+            width: 100%;
+            height: 320px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #777;
+            font-size: 1.1em;
+        }
+
+        .label {
+            color: #6c757d;
+            font-weight: 600;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .value {
+            font-size: 1.1em;
+            color: #333;
+        }
+
+        .price {
+            font-size: 1.8em;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        .badge-category {
+            background: #eef2ff;
+            color: #4c51bf;
+            font-weight: 600;
+        }
+
+        .toolbar a {
+            color: white;
+            text-decoration: none;
+        }
+
+        .toolbar a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-card">
+        <header>
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1"><i class="bi bi-box-seam"></i> Product Details</h1>
+                    <div id="subtitle" class="small">Loading product...</div>
+                </div>
+                <div class="toolbar">
+                    <a class="me-3" href="/products"><i class="bi bi-arrow-left"></i> Back to Products</a>
+                    <a href="/categories"><i class="bi bi-tags"></i> Categories</a>
+                </div>
+            </div>
+        </header>
+
+        <div class="content">
+            <div id="message" class="alert d-none" role="alert"></div>
+
+            <div id="productContent" class="row g-4 d-none">
+                <div class="col-md-6">
+                    <div id="imageWrapper"></div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <div class="label">Name</div>
+                        <div id="productName" class="value"></div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="label">Price</div>
+                        <div id="productPrice" class="price"></div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="label">Category</div>
+                        <div id="productCategory" class="value"></div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="label">Description</div>
+                        <div id="productDescription" class="value"></div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="label">Last Updated</div>
+                        <div id="productUpdated" class="value"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function getProductId() {
+            const parts = window.location.pathname.split("/").filter(Boolean);
+            return parts.length ? parts[parts.length - 1] : null;
+        }
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem("token");
+            return token ? { "Authorization": `Bearer ${token}` } : {};
+        }
+
+        function showMessage(text, type) {
+            const message = document.getElementById("message");
+            message.textContent = text;
+            message.className = `alert alert-${type}`;
+            message.classList.remove("d-none");
+        }
+
+        function hideMessage() {
+            const message = document.getElementById("message");
+            message.classList.add("d-none");
+        }
+
+        function formatDate(value) {
+            if (!value) {
+                return "-";
+            }
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+        }
+
+        async function loadProduct() {
+            const id = getProductId();
+            if (!id) {
+                showMessage("Missing product id in URL.", "danger");
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/products/${id}`, {
+                    headers: getAuthHeaders()
+                });
+                const result = await response.json();
+
+                if (!result.success) {
+                    showMessage(result.message || "Failed to load product.", "danger");
+                    return;
+                }
+
+                hideMessage();
+                const product = result.resource;
+
+                document.getElementById("subtitle").textContent = `Product #${product.id}`;
+                document.getElementById("productName").textContent = product.name || "-";
+                document.getElementById("productPrice").textContent = `$${Number(product.price || 0).toFixed(2)}`;
+                document.getElementById("productDescription").textContent = product.description || "No description";
+                document.getElementById("productUpdated").textContent = formatDate(product.updated_at || product.updatedAt);
+
+                const category = product.category ? product.category.name : "Uncategorized";
+                document.getElementById("productCategory").innerHTML = `<span class="badge badge-category">${category}</span>`;
+
+                const imageWrapper = document.getElementById("imageWrapper");
+                if (product.image_path) {
+                    imageWrapper.innerHTML = `<img src="/api/products/${product.id}/image" alt="${product.name}" class="product-image">`;
+                } else {
+                    imageWrapper.innerHTML = '<div class="no-image"><i class="bi bi-image"></i> No Image</div>';
+                }
+
+                document.getElementById("productContent").classList.remove("d-none");
+            } catch (error) {
+                showMessage("Error loading product details.", "danger");
+            }
+        }
+
+        loadProduct();
+    </script>
+</body>
+</html>

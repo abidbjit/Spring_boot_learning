@@ -8,7 +8,17 @@ public class HomeController {
 
     @GetMapping("/")
     public String home() {
-        return "index.html";
+        return "product/index.html";
+    }
+
+    @GetMapping("/products")
+    public String products() {
+        return "product/index.html";
+    }
+
+    @GetMapping("/products/{id}")
+    public String productDetails() {
+        return "forward:/product/productDetails.html";
     }
 
     @GetMapping("/categories")
