@@ -340,12 +340,14 @@
                     body: formData
                 });
                 
-                if (response.ok) {
-                    showMessage('Product created successfully!', 'success');
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message || 'Product created successfully!', 'success');
                     document.getElementById('createForm').reset();
                     loadProducts();
                 } else {
-                    showMessage('Failed to create product', 'error');
+                    showMessage(result.message || 'Failed to create product', 'error');
                 }
             } catch (error) {
                 showMessage('Error: ' + error.message, 'error');
@@ -373,12 +375,14 @@
                     body: formData
                 });
                 
-                if (response.ok) {
-                    showMessage('Product updated successfully!', 'success');
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage(result.message || 'Product updated successfully!', 'success');
                     cancelUpdate();
                     loadProducts();
                 } else {
-                    showMessage('Failed to update product', 'error');
+                    showMessage(result.message || 'Failed to update product', 'error');
                 }
             } catch (error) {
                 showMessage('Error: ' + error.message, 'error');
@@ -389,7 +393,14 @@
         async function loadProducts() {
             try {
                 const response = await fetch(API_URL);
-                const products = await response.json();
+                const result = await response.json();
+                
+                if (!result.success) {
+                    showMessage(result.message || 'Failed to load products', 'error');
+                    return;
+                }
+                
+                const products = result.collection.items || [];
                 
                 const productsContainer = document.getElementById('productsList');
                 
@@ -459,11 +470,18 @@
                     method: 'DELETE'
                 });
                 
+                // DELETE returns 204 No Content with no body
                 if (response.ok) {
                     showMessage('Product deleted successfully!', 'success');
                     loadProducts();
                 } else {
-                    showMessage('Failed to delete product', 'error');
+                    // Try to parse error message for non-ok responses
+                    try {
+                        const result = await response.json();
+                        showMessage(result.message || 'Failed to delete product', 'error');
+                    } catch {
+                        showMessage('Failed to delete product', 'error');
+                    }
                 }
             } catch (error) {
                 showMessage('Error: ' + error.message, 'error');

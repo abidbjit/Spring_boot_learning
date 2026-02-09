@@ -5,6 +5,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import com.example.demo.dto.ApiCollection;
+import com.example.demo.dto.ApiResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -26,16 +28,19 @@ public class CategoryController {
     private CategoryService categoryService;
 
     @GetMapping
-    public ResponseEntity<List<Category>> getAllCategories() {
+    public ResponseEntity<ApiResponse> getAllCategories() {
         List<Category> categories = categoryService.getAllCategories();
-        return ResponseEntity.ok(categories);
+        ApiCollection<Category> collection = ApiCollection.of(categories);
+        return ResponseEntity.ok(ApiResponse.successCollection("Categories retrieved successfully", collection));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> getCategoryById(@PathVariable Long id) {
         return categoryService.getCategoryById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(category -> ResponseEntity
+                        .ok(ApiResponse.successResource("Category retrieved successfully", category)))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.notFound("Category not found with id: " + id)));
     }
 
     @GetMapping("/{id}/image")
@@ -67,7 +72,7 @@ public class CategoryController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Category> createCategory(
+    public ResponseEntity<ApiResponse> createCategory(
             @RequestParam("name") String name,
             @RequestParam("description") String description,
             @RequestParam(value = "image", required = false) MultipartFile image) {
@@ -76,14 +81,16 @@ public class CategoryController {
             category.setName(name);
             category.setDescription(description);
             Category savedCategory = categoryService.createCategory(category, image);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedCategory);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.createdResource("Category created successfully", savedCategory));
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.internalError("Failed to create category: " + e.getMessage()));
         }
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Category> updateCategory(
+    public ResponseEntity<ApiResponse> updateCategory(
             @PathVariable Long id,
             @RequestParam("name") String name,
             @RequestParam("description") String description,
@@ -93,21 +100,24 @@ public class CategoryController {
             categoryDetails.setName(name);
             categoryDetails.setDescription(description);
             Category updatedCategory = categoryService.updateCategory(id, categoryDetails, image);
-            return ResponseEntity.ok(updatedCategory);
+            return ResponseEntity.ok(ApiResponse.successResource("Category updated successfully", updatedCategory));
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notFound("Category not found with id: " + id));
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.internalError("Failed to update category: " + e.getMessage()));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategory(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> deleteCategory(@PathVariable Long id) {
         try {
             categoryService.deleteCategory(id);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(ApiResponse.noContent("Category deleted successfully"));
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notFound("Category not found with id: " + id));
         }
     }
 }

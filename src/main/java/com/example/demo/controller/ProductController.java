@@ -1,5 +1,7 @@
 package com.example.demo.controller;
 
+import com.example.demo.dto.ApiCollection;
+import com.example.demo.dto.ApiResponse;
 import com.example.demo.model.Product;
 import com.example.demo.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,16 +27,19 @@ public class ProductController {
     private ProductService productService;
 
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
+    public ResponseEntity<ApiResponse> getAllProducts() {
         List<Product> products = productService.getAllProducts();
-        return ResponseEntity.ok(products);
+        ApiCollection<Product> collection = ApiCollection.of(products);
+        return ResponseEntity.ok(ApiResponse.successCollection("Products retrieved successfully", collection));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> getProductById(@PathVariable Long id) {
         return productService.getProductById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .map(product -> ResponseEntity
+                        .ok(ApiResponse.successResource("Product retrieved successfully", product)))
+                .orElse(ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(ApiResponse.notFound("Product not found with id: " + id)));
     }
 
     @GetMapping("/{id}/image")
@@ -66,7 +71,7 @@ public class ProductController {
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Product> createProduct(
+    public ResponseEntity<ApiResponse> createProduct(
             @RequestParam("name") String name,
             @RequestParam("description") String description,
             @RequestParam("price") Double price,
@@ -74,14 +79,16 @@ public class ProductController {
         try {
             Product product = new Product(name, description, price);
             Product savedProduct = productService.createProduct(product, image);
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(ApiResponse.createdResource("Product created successfully", savedProduct));
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.internalError("Failed to create product: " + e.getMessage()));
         }
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<Product> updateProduct(
+    public ResponseEntity<ApiResponse> updateProduct(
             @PathVariable Long id,
             @RequestParam("name") String name,
             @RequestParam("description") String description,
@@ -90,21 +97,24 @@ public class ProductController {
         try {
             Product productDetails = new Product(name, description, price);
             Product updatedProduct = productService.updateProduct(id, productDetails, image);
-            return ResponseEntity.ok(updatedProduct);
+            return ResponseEntity.ok(ApiResponse.successResource("Product updated successfully", updatedProduct));
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notFound("Product not found with id: " + id));
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.internalError("Failed to update product: " + e.getMessage()));
         }
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse> deleteProduct(@PathVariable Long id) {
         try {
             productService.deleteProduct(id);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(ApiResponse.noContent("Product deleted successfully"));
         } catch (Exception e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.notFound("Product not found with id: " + id));
         }
     }
 }

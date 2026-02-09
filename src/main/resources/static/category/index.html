@@ -113,9 +113,17 @@
         function loadCategories() {
             fetch('/api/categories')
             .then(response => response.json())
-            .then(data => {
+            .then(result => {
                 const tbody = document.getElementById('categoryTableBody');
                 tbody.innerHTML = '';
+                
+                if (!result.success) {
+                    console.error('Error:', result.message);
+                    alert('Failed to load categories: ' + (result.message || 'Unknown error'));
+                    return;
+                }
+                
+                const data = result.collection.items || [];
                 
                 if (data.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="5" class="text-center text-muted">No categories found. Create your first category!</td></tr>';
@@ -164,7 +172,13 @@
             // Fetch category details
             fetch(`/api/categories/${id}`)
                 .then(response => response.json())
-                .then(category => {
+                .then(result => {
+                    if (!result.success) {
+                        alert('Failed to load category: ' + (result.message || 'Unknown error'));
+                        return;
+                    }
+                    
+                    const category = result.resource;
                     document.getElementById('categoryName').value = category.name;
                     document.getElementById('categoryDescription').value = category.description || '';
                     
@@ -221,13 +235,14 @@
                 method: method,
                 body: formData
             })
-            .then(response => {
-                if (response.ok) {
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
                     categoryModal.hide();
                     loadCategories();
-                    showToast(id ? 'Category updated successfully!' : 'Category created successfully!');
+                    showToast(result.message || (id ? 'Category updated successfully!' : 'Category created successfully!'));
                 } else {
-                    throw new Error('Failed to save category');
+                    alert('Failed to save category: ' + (result.message || 'Unknown error'));
                 }
             })
             .catch(error => {
@@ -240,11 +255,17 @@
             if (confirm('Are you sure you want to delete this category?')) {
                 fetch(`/api/categories/${id}`, { method: 'DELETE' })
                     .then(response => {
+                        // DELETE returns 204 No Content with no body
                         if (response.ok) {
                             loadCategories();
                             showToast('Category deleted successfully!');
                         } else {
-                            throw new Error('Failed to delete category');
+                            // Try to parse error message for non-ok responses
+                            response.json().then(result => {
+                                alert('Failed to delete category: ' + (result.message || 'Unknown error'));
+                            }).catch(() => {
+                                alert('Failed to delete category. Please try again.');
+                            });
                         }
                     })
                     .catch(error => {
